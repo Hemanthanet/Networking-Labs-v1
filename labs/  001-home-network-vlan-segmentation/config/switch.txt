@@ -1,1 +1,107 @@
+I enter to the  Global configuration mode 
+
+Switch > enable 
+Switch# >configure terminal 
+Switch(config)# vlan 10
+Switch(config-vlan)# name Home
+Switch(config-vlan)# exit
+
+
+I used  vlan 10 for home network and the vlan 20 used  for Guest network 
+
+
+configured interface  for VLAN 10 
+
+Switch(config)# interface fastEthernet 0/1 (this is the port opened for  home network) 
+Switch(config-if)# switchport mode access 
+Switch(config-if)# switchport access vlan 10
+
+
+configure VLAN 20 
+
+Switch(config)# interface fastEthernet 0/2 (this  is the port  opened for  Guest )
+Switch (config-if)# switchport mode access 
+Switchport(config-if)# swichport accees vlan 20 
+
+Now  moved to the  trunk port (this is the interface which is  connected to the router ) 
+
+  Switch# configure terminal 
+  Switch(config)# interface FastEthernet 0/3 
+  Switch(config-if)# Switch(config-if)# switchport mode trunk
+
+
+Next Router configuration 
+
+
+In router  I have to configure for both VLAN (10,20), here I used  decimal for sub interface for each subinerfaces
+
+For VLAN 10 
+
+Router(config)# interface  0/0.10 
+Router(config-subif)# encapsulation dot1Q 10
+Router(config-subif)# ip address 192.168.10.1 255.255.255.0 - this is the default Gateway 
+
+
+For VLAN 20 
+
+Router(config)# interface 0/0.20
+Router(config-subif)#encasulation dotQ 20
+Router(config-subif) #ip address 192.168.20.1 255.255.255.0  -default gateway 
+
+
+
+After adding these features  then all router ports active(up) 
+
+For that  in the  interface mode  add  "no shutdown " 
+
+
+Now we have configure DHCP 
+
+for the DHCP we have to make 2 DHCP pools for  Home and the Guest 
+
+for Home 
+
+Router(config)# ip dhcp pool HOME_POOL
+Router(dhcp-config)# network 192.168.10.0 255.255.255.0  
+Router(dhcp-config)# default-router 192.168.10.1
+
+
+Same as for the Guest 
+
+
+Router(config)# ip dhcp pool GUEST_POOL
+Router(dhcp-config)# network 192.168.20.0 255.255.255.0 
+Router(dhcp-config)# default-router 192.168.20.1
+
+
+
+Now we have to configure  the ACL  - rule is  guest can't access the  home  network (deny) 
+
+ACL global configuration 
+
+     	Router(config)# ip access-list extended GUEST_RESTRICTION
+	Router(config-ext-nacl)# deny ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
+	Router(config-ext-nacl)# permit ip any any
+	Router(config-ext-nacl)# exit
+
+Then Apply it to the Interface
+Now, you need to go into the Guest subinterface and tell the router to use this list to filter traffic.
+
+Router(config)# interface gigabitEthernet 0/0.20
+Router(config-subif)# ip access-group GUEST_RESTRICTION in
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
